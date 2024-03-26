@@ -15,8 +15,11 @@ for i = 1:7
     l(end+1) = power;
     if i <= 3   % 避免内存爆炸
         t1(end+1) = calculate_by_definition(x);
-        t2(end+1) = calculate_by_matrix(x);
+        t2(end+1) = calculate_by_matrix(x);  % 本地用这行
     end
+    % if i <= 4   % 避免内存爆炸 虚拟机用这行
+    %     t2(end+1) = calculate_by_matrix(x);
+    % end
     t3(end+1) = calculate_by_fft(x);
     t4(end+1) = calculate_by_fft_in_GPU(x);
     disp(l);
@@ -100,9 +103,9 @@ end
 
 % fft在GPU中计算
 function t = calculate_by_fft_in_GPU(x)
+    x_GPU = gpuArray(x);
     profile on;
 
-        x_GPU = gpuArray(x);
         X = fft(x_GPU);
 
     profile off;
