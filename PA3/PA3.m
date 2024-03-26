@@ -68,18 +68,8 @@ end
 % 矩阵计算
 function t = calculate_by_matrix(x)
     profile on;
-    
-        N = length(x);
-        P = zeros(N, N);
-        v = zeros(1, N);
-        WN = exp(-1i*2*pi/N);
-        for n = 0:N-1
-            v(n+1) = WN^n;
-        end
-        for k = 0:N-1
-            p = v.^k;
-            P(:, k+1) = p;
-        end
+   
+        P = exp(-1i * 2 * pi / length(x) * (0:length(x)-1).' * (0:length(x)-1));
         X = x * P;
     
     profile off;
@@ -113,8 +103,7 @@ function t = calculate_by_fft_in_GPU(x)
     profile on;
 
         x_GPU = gpuArray(x);
-        X_GPU = fft(x_GPU);
-        X = gather(X_GPU);
+        X = fft(x_GPU);
 
     profile off;
     % 计时
