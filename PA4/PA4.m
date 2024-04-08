@@ -159,6 +159,7 @@ xlabel('时间 (s)');
 %% 4
 Faudio = fft(audio);
 Faudio_mod = Faudio;
+f = Fs*(0:(length(audio)/2))/length(audio);
 
 % 增强人声
 Faudio_mod((f>5e2) & (f<8e3)) = Faudio_mod((f>5e2) & (f<8e3)) * 10;
