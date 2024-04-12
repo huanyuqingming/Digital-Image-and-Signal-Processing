@@ -157,17 +157,22 @@ title('15kHz插值与源文件时域波形对比图');
 xlabel('时间 (s)');
 
 %% 4
-Faudio = fft(audio);
-Faudio_mod = Faudio;
-f = Fs*(0:(length(audio)/2))/length(audio);
+% 定义窗口参数
+win = hamming(128);
+overlap = length(win)/2;
+nfft = length(win);
 
-% 增强人声
-Faudio_mod((f>5e2) & (f<8e3)) = Faudio_mod((f>5e2) & (f<8e3)) * 10;
-% 削弱乐器
-Faudio_mod((f>0) & (f<5e2)) = Faudio_mod((f>0) & (f<5e2)) * 0.1;
-Faudio_mod((f>8e3) & (f<24e3)) = Faudio_mod((f>8e3) & (f<24e3)) * 0.1;
+% 进行STFT
+[S, f, t] = stft(audio, Fs, "Window",win, "OverlapLength",overlap, "FFTLength",nfft);
 
-audio_mod = real(ifft(Faudio_mod)); % 去除虚数部分
+% 增强人声、削弱乐器
+S((f > 5e2) & (f < 8e3), :) = S((f > 5e2) & (f < 8e3), :) * 100;
+S((f > 0) & (f < 5e2), :) = S((f > 0) & (f < 5e2), :) * 0.01;
+S((f > 8e3) & (f < 24e3), :) = S((f > 8e3) & (f < 24e3), :) * 0.01;
+
+% 进行逆STFT
+audio_mod = istft(S, Fs, "OverlapLength",overlap, "FFTLength",nfft);
+audio_mod = real(audio_mod);    % 去除虚数部分
 normalized_audio = audio_mod / max(abs(audio_mod)); % 归一化，防止失真
 
 % 导出音频
