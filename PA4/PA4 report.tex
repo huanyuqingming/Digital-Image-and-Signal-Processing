@@ -152,8 +152,8 @@
 \section{读取乐曲，并绘制其时域波形图和STFT时频图}
 
 \begin{lstlisting}[language=matlab]
-    [audio, Fs] = audioread([filename, '.wav']);
-    spectrogram(audio, window, noverlap, nfft, Fs, 'yaxis');
+[audio, Fs] = audioread([filename, '.wav']);
+spectrogram(audio, window, noverlap, nfft, Fs, 'yaxis');
 \end{lstlisting}
 
 \begin{figure}[H]   %*表示可跨栏，如果不需要可去掉
@@ -162,10 +162,10 @@
 
 \section{对乐曲进行下采样，并绘制其时域波形图和STFT时频图}
 \begin{lstlisting}[language=matlab]
-    % 分别以5kHz、10kHz、15kHz的采样率对乐曲进行下采样
-    resampled_audio_5 = resample(audio, 5e3, Fs);
-    resampled_audio_10 = resample(audio, 10e3, Fs);
-    resampled_audio_15 = resample(audio, 15e3, Fs);
+% 分别以5kHz、10kHz、15kHz的采样率对乐曲进行下采样
+resampled_audio_5 = resample(audio, 5e3, Fs);
+resampled_audio_10 = resample(audio, 10e3, Fs);
+resampled_audio_15 = resample(audio, 15e3, Fs);
 \end{lstlisting}
 
 \begin{figure}[H]   %*表示可跨栏，如果不需要可去掉
@@ -175,9 +175,9 @@
 \section{对下采样后的乐曲进行插值恢复，绘制其时域波形图和STFT时频图并与原乐曲进行对比}
 
 \begin{lstlisting}[language=matlab]
-    interpolated_audio_5 = resample(resampled_audio_5, Fs, 5e3);
-    interpolated_audio_10 = resample(resampled_audio_10, Fs, 10e3);
-    interpolated_audio_15 = resample(resampled_audio_15, Fs, 15e3);
+interpolated_audio_5 = resample(resampled_audio_5, Fs, 5e3);
+interpolated_audio_10 = resample(resampled_audio_10, Fs, 10e3);
+interpolated_audio_15 = resample(resampled_audio_15, Fs, 15e3);
 \end{lstlisting}
 
 \begin{figure}[H]   %*表示可跨栏，如果不需要可去掉
@@ -188,13 +188,22 @@
 
 \section{设计一个作用为清晰人声的均衡器，对乐曲进行处理}
 \begin{lstlisting}
-    % 增强人声
-    Faudio_mod((f>5e2) & (f<8e3)) = Faudio_mod((f>5e2) & (f<8e3)) * 10;
-    % 削弱乐器
-    Faudio_mod((f>0) & (f<5e2)) = Faudio_mod((f>0) & (f<5e2)) * 0.1;
-    Faudio_mod((f>8e3) & (f<24e3)) = Faudio_mod((f>8e3) & (f<24e3)) * 0.1;
+% 定义窗口参数
+win = hamming(128);
+overlap = length(win)/2;
+nfft = length(win);
+% 进行STFT
+[S, f, t] = stft(audio, Fs, "Window",win, "OverlapLength",overlap, "FFTLength",nfft);
+% 增强人声、削弱乐器
+S((f > 5e2) & (f < 8e3), :) = S((f > 5e2) & (f < 8e3), :) * 100;
+S((f > 0) & (f < 5e2), :) = S((f > 0) & (f < 5e2), :) * 0.01;
+S((f > 8e3) & (f < 24e3), :) = S((f > 8e3) & (f < 24e3), :) * 0.01;
+% 进行逆STFT
+audio_mod = istft(S, Fs, "OverlapLength",overlap, "FFTLength",nfft);
+audio_mod = real(audio_mod);    % 去除虚数部分
+normalized_audio = audio_mod / max(abs(audio_mod)); % 归一化，防止失真
 \end{lstlisting}
 
-该均衡器通过对人声频率段（500-8kHz）添加10dB的增益，对乐器频率段（0-500Hz，8k-24kHz）添加-10dB的增益，增加了人声与乐器的对比度，使得人声更加清晰。
+该均衡器通过对人声频率段（500-8kHz）添加20dB的增益，对乐器频率段（0-500Hz，8k-24kHz）添加-20dB的增益，增加了人声与乐器的对比度，使得人声更加清晰。
 
 \end{document}
